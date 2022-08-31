@@ -17,6 +17,8 @@ capture = cv2.VideoCapture(0)
 # 첫 프레임을 읽어서 웹캠의 정보를 알아내는 부분
 ret, cam = capture.read()
 h, w, n = cam.shape
+total_point = 0
+total_right = 0
 
 while True:
     ret, cam = capture.read()
@@ -35,7 +37,9 @@ while True:
         points = interpreter.get_tensor(output_details[0]['index'])
 
         for index, point in enumerate(points[0][0]):
+            total_point += 1
             if point[2] > 0.3:
+                total_right +=1
                 cv2.circle(cam, (int(point[1] * w), (int(point[0] * h))), 3, (0, 255, 0))
                 if index > 4:
                     cv2.putText(cam, org=(int(point[1] * w), (int(point[0] * h) - 10)), fontScale=0.3,
@@ -44,9 +48,15 @@ while True:
 
         terminate_t = timeit.default_timer()
         fps = int(1. / (terminate_t - start_t))
+        confidence = int(total_right/total_point*100)
         cv2.putText(cam, org=(5,20), fontScale=0.5,
                     color=(0, 255, 0), text=str(fps), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     lineType=cv2.LINE_AA, thickness=1)
+
+        cv2.putText(cam, org=(50, 20), fontScale=0.5,
+                    color=(0, 255, 0), text='{}%'.format(str(confidence)), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    lineType=cv2.LINE_AA, thickness=1)
+
         cv2.imshow('camera', cam)
 
     if cv2.waitKey(1) & 0Xff == 27:
